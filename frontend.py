@@ -95,8 +95,8 @@ async def rungraph(inputs, runnable):
 input_text = st.text_input(label='')
 if input_text:
     try:
-        asyncio.run(rungraph(inputs={'prompt': input_text}, runnable=app))
-    
+        with st.spinner('Generating...'):
+            asyncio.run(rungraph(inputs={'prompt': input_text}, runnable=app))    
     except Exception as e:
         st.error(f"Error: {e}")
 
