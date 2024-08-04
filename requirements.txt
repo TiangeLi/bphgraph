@@ -3,6 +3,7 @@ langchain_openai
 langchain-text-splitters
 langchain-community
 faiss-cpu
+langserve
 pydantic==1.10.13
 langgraph
 sse-starlette==1.8.2
