@@ -9,4 +9,3 @@ fastapi
 langserve
 pydantic==1.10.13
 langgraph
-sse_starlette
