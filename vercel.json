@@ -1,20 +1,12 @@
 {
     "version": 2,
     "builds": [
-      {
-        "src": "langserver.py",
-        "use": "@vercel/python"
-      }
+      { "src": "langserver.py", "use": "@vercel/python" }
     ],
     "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "langserver.py"
-      }
+      { "src": "/(.*)", "dest": "/langserver.py" }
     ],
-    "functions": {
-      "api/**": {
-        "excludeFiles": "{.next,*.cache,node_modules,public,app}/**"
-      }
+    "env": {
+      "APP_MODULE": "langserver:app"
     }
-}
+  }
