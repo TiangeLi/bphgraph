@@ -81,12 +81,20 @@ async def rungraph(inputs, runnable):
         st.caption(readable_sources_str)
                 
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+USE_LOCAL_SERVER = True if int(os.getenv('USE_LOCAL_SERVER')) else False
 
+if USE_LOCAL_SERVER:
+    from main_graph import graph
+    app = graph
+else:
+    app = RemoteRunnable("http://localhost:8000/chat/")
 
 input_text = st.text_input(label='')
 if input_text:
     try:
-        app = RemoteRunnable("http://localhost:8000/chat/")
         asyncio.run(rungraph(inputs={'prompt': input_text}, runnable=app))
     
     except Exception as e:
