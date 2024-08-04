@@ -6,5 +6,5 @@ langchain_openai
 langchain-text-splitters
 langchain-community
 faiss-cpu
-pydantic==1.10.13
+pydantic
 sse-starlette==1.8.2
