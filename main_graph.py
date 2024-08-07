@@ -7,14 +7,10 @@ os.environ['LANGCHAIN_TRACING_V2'] = 'true'
 os.environ['LANGCHAIN_API_KEY'] = os.getenv('LS_APIKEY')
 os.environ['LANGCHAIN_ENDPOINT'] = 'https://api.smith.langchain.com'
 os.environ['LANGCHAIN_PROJECT'] = os.getenv('LS_PROJECT_NAME')
-DISPLAYS_TOPIC_EXPANSION = True if int(os.getenv('DISPLAYS_TOPIC_EXPANSION')) else False
 
-import operator
 from typing import Annotated
 from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, START, END
-from langgraph.graph.message import add_messages, AnyMessage
-from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -55,8 +51,8 @@ graph_builder = StateGraph(State)
 # --- define nodes and edges ---
 def router_node(state: State):
     _input = {'question': state['prompt'], 'summary': state['summary']}
-    result = router_chain.invoke(_input).strip().lower() == 'yes'
-    return {'use_guidelines': result}
+    use_guidelines = router_chain.invoke(_input)
+    return {'use_guidelines': use_guidelines['b']}
 def router_edge(state: State):
     if state['use_guidelines']:
         return '__use_guidelines__'

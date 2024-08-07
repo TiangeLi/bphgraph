@@ -3,9 +3,11 @@ import asyncio
 import re
 import requests
 import json
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-remote_url = 'http://localhost:8000/chat'
-
+backend_url = os.getenv('BACKEND_URL')
 
 st.set_page_config(layout="wide")
 
@@ -44,7 +46,7 @@ async def rungraph(inputs):
         sources_container = st.empty()
         detailed_container = st.empty()
     
-    with requests.post(remote_url, json=inputs, stream=True) as resp:
+    with requests.post(backend_url, json=inputs, stream=True) as resp:
         for line in resp.iter_lines():
             line = json.loads(line)
             if 'node' in line:
@@ -55,13 +57,15 @@ async def rungraph(inputs):
             elif 'content' in line:
                 content = line['content']
 
-            if curr_node in ['router', 'expander', 'multiquery']:
+            if curr_node == 'expander':
                 status_container.progress(15, text='Generating Topic Expansion...')
+            elif curr_node == 'multiquery':
+                status_container.progress(30, text='Generating Topic Expansion...')
             elif curr_node == 'retrieval':
                 status_container.progress(57, text='Retrieving Knowledge...')
             elif curr_node in ['filter', 'prompt_synthesis']:
                 status_container.progress(80, text='Compressing and Synthesizing Query...')
-            elif curr_node in ['chat', 'summarizer']:
+            elif curr_node == 'chat':
                 status_container.empty()
 
             if curr_node == 'chat' and content:
@@ -88,7 +92,7 @@ async def rungraph(inputs):
                 st.caption(readable_sources_str)
 
 
-input_text = st.text_input(label='')
+input_text = st.text_input(label='Ask anything about BPH')
 if input_text:
     try:
         with st.spinner('Generating...'):

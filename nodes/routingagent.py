@@ -1,16 +1,27 @@
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+
+from llm_response_types import BooleanResponse
 from constants import ROUTERLLM
+from template import meds_abbrevs_table, surg_abbrevs_table, other_abbrevs_table
+
 
 router_template = \
-f"""Given the user query, reply either YES or NO.
+f"""<related_terms>
+{meds_abbrevs_table}
 
-NO: if the user query is general/unrelated to BPH and does not require information from a BPH knowledge base
-YES: if the user query is or could be about benign prostate hyperplasia (BPH), including definitions, symptoms, diagnosis, testing, management, treatment, related medications/medical therapy, surgical therapy, complications, side effects, or other topics broadly related to BPH.
-If in doubt, reply YES.
+{surg_abbrevs_table}
 
-Conversation summary:
-```{{summary}}```"""
+{other_abbrevs_table}
+</related_terms>
+
+<conversation_summary>
+{{summary}}
+</conversation_summary>
+
+Evaluate the user query. Is it about benign prostate hyperplasia (BPH) and therefore requires information from a BPH knowledge base?
+
+You would want to use the BPH knowledge base, if:
+the user query is or could be about benign prostate hyperplasia (BPH), including definitions, symptoms, diagnosis, testing, management, treatment, related medications/medical therapy, surgical therapy, complications, side effects, or other topics broadly related to BPH."""
 
 
 router_prompt = ChatPromptTemplate.from_messages(
@@ -20,4 +31,5 @@ router_prompt = ChatPromptTemplate.from_messages(
     ]
 
 )
-router_chain = router_prompt | ROUTERLLM | StrOutputParser()
+
+router_chain = router_prompt | ROUTERLLM.with_structured_output(schema=BooleanResponse, method='json_schema', strict=True)

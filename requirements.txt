@@ -1,10 +1,13 @@
 openai
-langgraph
-python-dotenv
 langchain
-langchain_openai
+python-dotenv
+langchain_openai==0.1.21rc2
 langchain-text-splitters
 langchain-community
 faiss-cpu
-pydantic==1.10.13
-sse-starlette==1.8.2
+pydantic
+
+# following are required for Koyeb (and likely other cloud deployments) but will crash langgraph studio for some reason
+#langgraph
+#pydantic==1.10.13
+#sse-starlette

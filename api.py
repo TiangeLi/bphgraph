@@ -2,6 +2,14 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, RedirectResponse
 from main_graph import graph
 import json
+from fastapi.middleware.cors import CORSMiddleware
+from os import getenv
+from dotenv import load_dotenv
+load_dotenv()
+
+origins = [
+    getenv('FRONTEND_URL'),
+]
 
 async def run_graph(input: dict):
     curr_node = ''
@@ -29,6 +37,12 @@ async def run_graph(input: dict):
                 content_to_stream = ''
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"]
+)
 
 @app.get("/")
 async def redirect_root_to_docs():

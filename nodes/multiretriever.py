@@ -1,10 +1,8 @@
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.schema import SystemMessage
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import chain, RunnableParallel
-import json
 from langchain.load import dumps, loads
-from template import meds_abbrevs_table, surg_abbrevs_table, other_abbrevs_table
+from llm_response_types import StringResponse, ListOfStringsResponse
+from template import meds_abbrevs_table, surg_abbrevs_table
 from constants import MULTIQUERYLLM, REPHRASINGLLM, REORGLLM
 
 
@@ -16,16 +14,7 @@ Your task is to generate subquestions from the Query.
 
 Rules:
 - One subquestion per ENTITY from the query
-- Each entity should be referred to by all of its names and abbreviations, per the tables provided.
-
-```json
-{{{{
-    "q1": "...",
-    "q2": "...,
-    ...,
-    "qn": "...",
-}}}}
-```"""
+- Each entity should be referred to by all of its names and abbreviations, per the tables provided."""
 
 sys_template_rephrase = f"""{sys_template_root}
 
@@ -95,10 +84,13 @@ def recs_string(tx_options: dict):
     return '\n\n'.join(strings)
 
 def _rephrase_reorganize_chain(_input: dict):
-    _rephrase_chain = rephrase_prompt | REPHRASINGLLM | StrOutputParser()  # gpt-4o
-    _reorg_chain = reorg_prompt | REORGLLM | StrOutputParser()  # gpt-4o-mini
-    _rephrased = _rephrase_chain.invoke(_input)
-    _reorg = _reorg_chain.invoke({'original_prompt': _input['question'], 'rephrased': _rephrased})
+    # gpt-4o
+    _rephrase_chain = rephrase_prompt | REPHRASINGLLM.with_structured_output(schema=StringResponse, method='json_schema', strict=True)
+    # gpt-4o-mini
+    _reorg_chain = reorg_prompt | REORGLLM.with_structured_output(schema=StringResponse, method='json_schema', strict=True)
+    # run chains
+    _rephrased = _rephrase_chain.invoke(_input)['s']
+    _reorg = _reorg_chain.invoke({'original_prompt': _input['question'], 'rephrased': _rephrased})['s']
     return {'rephrased': _rephrased, 'reorganized': _reorg}
         
 @chain
@@ -106,15 +98,16 @@ def generate_queries(_input: dict):
     q_raw, summary, _tx_options = _input['question'], _input['summary'], _input['tx_options']
     treatments = recs_string(_tx_options)
 
-    _multi_chain = multi_prompt | MULTIQUERYLLM | StrOutputParser()  # gpt-4o
+    _multi_chain = multi_prompt | MULTIQUERYLLM.with_structured_output(schema=ListOfStringsResponse, method='json_schema', strict=True)
 
     _chain = RunnableParallel(mc=_multi_chain, rc=_rephrase_reorganize_chain)
     _qs = _chain.invoke({'question': q_raw, 'summary': summary, 'treatments': treatments})
-    _qs_multi = json.loads(_qs['mc'].strip('```json\n').strip('```'))
+    
+    _qs_multi = _qs['mc']['l']
     _qs_rephrase = _qs['rc']['rephrased']
     _qs_reorg = _qs['rc']['reorganized']
 
-    qs = {**_qs_multi, 'rephrased': _qs_rephrase, 'reorganized': _qs_reorg, 'original': f"Query: {q_raw}\n\n{treatments}\n\n{summary}"}
+    qs = {**{f'q{i+1}':q for i, q in enumerate(_qs_multi)}, 'rephrased': _qs_rephrase, 'reorganized': _qs_reorg, 'original': f"Query: {q_raw}\n\n{treatments}\n\n{summary}"}
     return qs
 
 
