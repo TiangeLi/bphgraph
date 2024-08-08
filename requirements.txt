@@ -8,6 +8,6 @@ faiss-cpu
 pydantic
 
 # following are required for Koyeb (and likely other cloud deployments) but will crash langgraph studio for some reason
-#langgraph
-#pydantic==1.10.13
-#sse-starlette
+langgraph
+pydantic
+sse-starlette
