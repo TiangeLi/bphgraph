@@ -13,3 +13,4 @@ pydantic
 sse-starlette
 
 uvicorn
+streamlit
