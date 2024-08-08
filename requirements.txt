@@ -12,6 +12,4 @@ langgraph
 pydantic
 sse-starlette
 
-asyncio
-subprocess
 uvicorn
