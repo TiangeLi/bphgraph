@@ -8,7 +8,10 @@ faiss-cpu
 pydantic
 fastapi
 
-# following are required for Koyeb (and likely other cloud deployments) but will crash langgraph studio for some reason
 langgraph
 pydantic
 sse-starlette
+
+asyncio
+subprocess
+uvicorn
